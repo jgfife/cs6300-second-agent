@@ -1,43 +1,21 @@
-# Agent Development Guide
+# AGENTS.md
 
-## Build/Test/Run Commands
-- **Install dependencies**: `make install` (creates virtual environment and installs requirements)
-- **Run investment research agent**: `python src/investment_research_agent.py`
-- **Run tests**: `pytest tests/ -v` (requires `pip install -r requirements.txt`)
-
-## Code Style Guidelines
-- **Python version**: 3.12+ (see Makefile install-deb target)
-- **Imports**: Standard library first, then third-party, then local (see existing code)
-- **Classes**: Use type annotations for class attributes (e.g., `name: str = "calculator"`)
-- **Functions**: Include docstrings with Args/Returns sections for public methods
-- **Naming**: snake_case for variables/functions, PascalCase for classes
-- **Environment**: Use `dotenv` for API keys, store in `.env` file
-- **Error handling**: Use standard Python exceptions, no specific patterns observed
-
-## Project Structure
-- Main code in `src/` directory
-- Tests in `tests/` directory with pytest framework
-- Use virtual environment `.virtual_environment/`
-- API keys: Store Gemini API key as `GEMINI_API_KEY` in `.env` file
-- Dependencies managed via `requirements.txt`
-- Logs stored in `logs/` directory with timestamped filenames
-
-## Current Implementation
-- **Investment Research Agent** (`src/investment_research_agent.py`): Main agent for answering investment-related questions
-- **Web Search Tool** (`visit_webpage`): Custom tool for fetching and converting web content to markdown
-- **Test Suite** (`tests/test_investment_research_agent.py`): Comprehensive tests including CEO identification
-- **Interactive CLI**: Run agent interactively or import programmatically for testing
-
-## Framework-Specific Notes  
-- Uses `smolagents` framework with `OpenAIServerModel` for Gemini API compatibility
-- Custom tools inherit from `smolagents.Tool` base class or use `@tool` decorator
-- Agent types: `ToolCallingAgent` for search operations, `CodeAgent` for orchestration
-- Agent initialization requires `tools`, `model`, and optional `additional_authorized_imports`
-- Agents can be nested: `CodeAgent` can manage multiple `ToolCallingAgent` instances
-
-## Testing Guidelines
-- Tests use pytest framework with custom test discovery
-- Mock external API calls for reliable unit tests when possible
-- Integration tests verify real API functionality (require valid API keys)
-- Test naming: `test_*` functions in `Test*` classes
-- Use descriptive assertions with failure messages for better debugging
+Build & Run: `make install` (creates `.virtual_environment`), then activate: `. .virtual_environment/bin/activate`.
+Primary Agent: `python src/adventure_agent.py` (sets up smolagents + tools).
+Tests: `make test` or `pytest -v`.
+Single Test File: `pytest tests/test_adventure_agent.py::TestAdventureAgent::test_some_case -v` (replace with real name).
+List Tests: `pytest --collect-only -q`.
+Python: 3.12+. Keep code compatible with standard library first.
+Imports Order: stdlib, third-party, local (grouped, no blank lines inside group).
+Dependencies: managed via `requirements.txt`; do NOT pin ad‑hoc in code.
+Env Vars: load with `python-dotenv`; Gemini key as `GEMINI_API_KEY` in `.env` (never commit secrets).
+Types: Use annotations for functions, class attributes (e.g., `name: str = "..."`). Prefer explicit `Optional[T]`, `List[T]`, etc.
+Docstrings: Triple-quoted; include short summary + Args/Returns; public tools clearly describe side effects and output format.
+Functions: pure where possible; keep network calls wrapped in `try/except RequestException` returning clear error strings (pattern in `visit_webpage`).
+Error Handling: Validate inputs early; return informative error messages (do not swallow unexpected exceptions silently—either re-raise or stringify consistently as shown).
+Style: snake_case for functions/vars, PascalCase for classes, UPPER_CASE for constants; avoid one-letter names except loop indices.
+Formatting: Follow existing spacing; keep lines reasonably short (<100 chars); no trailing whitespace; no unused imports.
+Testing Conventions: Files `test_*.py`, classes `Test*`, functions `test_*` (see `pytest.ini`). Use `pytest-mock` for external API isolation.
+Network Calls: Consider mocking external HTTP for deterministic tests; truncate large payloads (>5k chars) like `visit_webpage`.
+Logging/Tracing: Phoenix instrumentation auto-registered; avoid excessive prints—prefer structured summaries returned by tools.
+No Cursor/Copilot rule files present; this document is authoritative for agents.

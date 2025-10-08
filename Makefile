@@ -29,8 +29,8 @@ install-pip: $(VENV)
 test: $(VENV)
 	. $(VENV)/bin/activate; pytest tests/ -v
 
-research-agent:
-	. $(VENV)/bin/activate; python3 -m phoenix.server.main serve > /dev/null 2>&1 & python3 src/investment_research_agent.py
+adventure-agent:
+	. $(VENV)/bin/activate; python3 -m phoenix.server.main serve > /dev/null 2>&1 & python3 src/adventure_agent.py
 
 kill-phoenix:
 	@echo "Killing Phoenix server processes..."

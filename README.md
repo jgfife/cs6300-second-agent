@@ -1,47 +1,38 @@
-# Investment Research Agent
+# Adventure Planning Agent
 
-An AI-powered investment research assistant built with Hugging Face smolagents, Alphavantage, and Google Gemini.
-
-## Disclaimer: This is a toy agent and should not be relied upon for actual investment advice!
+An AI-powered adventure planner that creates detailed trip itineraries by searching for activities, checking weather forecasts, and providing weather-aware recommendations for any destination.
 
 ## Features
 
-- **Investment-focused Q&A**: Answers questions about companies, stocks, and financial topics
-- **Web search capabilities**: Uses DuckDuckGo search and webpage content extraction
-- **CEO identification**: Accurately identifies company leadership (tested with Apple/Tim Cook)
-- **Interactive CLI**: Chat-based interface with conversation logging
-- **Comprehensive testing**: Full test suite with pytest framework
+- **Adventure Trip Planning**: Creates day-by-day itineraries for any destination and duration
+- **Weather Integration**: Fetches real-time weather forecasts and adjusts recommendations accordingly
+- **Smart Activity Search**: Finds adventure activities, attractions, and experiences tailored to your interests
+- **ReAct Reasoning**: Uses step-by-step reasoning to gather information and create comprehensive plans
+- **Web Research**: Searches and visits travel websites to gather detailed activity information
+- **Weather-Aware Recommendations**: Suggests appropriate activities based on weather conditions and alerts to potential risks
+- **Interactive CLI**: Chat-based interface with detailed planning output
 
 ## Quick Start
 
 ### 1. Setup Environment
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+make install
 
-# Set up your Gemini API and Alphavantage key
+# Set up your Gemini API key
 export GEMINI_API_KEY="your_api_key_here"
-export ALPHAVANTAGE_API_KEY="your_api_key_here"
 # Or create a .env file with: GEMINI_API_KEY=your_api_key_here
-
-# Alternatively you can run make commands
-make install # install dependencies
 ```
+
 ### 2. Run the Agent
 ```bash
 # Interactive mode
-python src/investment_research_agent.py
+python src/adventure_agent.py
 
-# Alternatively you can run make commands
-make research-agent # start phoenix server for open telemetry and run main agent
-
-# Example questions to try:
-# - "Who is the CEO of Apple?"
-# - "What is Tesla's stock ticker symbol?"
-# - "Tell me about Microsoft's recent earnings"
-
-# Once done, cleanup the Phoenix server
-make kill-phoenix
+# Example requests to try:
+# - "Plan a 3-day hiking trip to Yosemite from June 15-17, 2024"
+# - "Create a 5-day adventure itinerary for Costa Rica in December"
+# - "What are the best outdoor activities in Chamonix for 2 days?"
 ```
 
 ### 3. Run Tests
@@ -49,26 +40,22 @@ make kill-phoenix
 # Run all tests
 pytest tests/ -v
 
-# Run just the CEO test
-pytest tests/test_investment_research_agent.py::TestInvestmentResearchAgent::test_apple_ceo_question -v
-
-# Alternatively you can run make commands
-make test # run tests
+# Run specific test categories
+pytest tests/test_adventure_agent.py::TestWeatherForecast -v
+pytest tests/test_adventure_agent.py::TestAdventureSearch -v
 ```
 
 ## API Setup
 
-### Gemini API Key
+### Gemini API Key (Required)
 1. Visit [Google AI Studio](https://aistudio.google.com/)
 2. Click "Get API key" 
 3. Create a new API key
 4. Set it as `GEMINI_API_KEY` environment variable
 
-### Alphavantage API Key
-1. Visit [Alphavantage Website](https://www.alphavantage.co/support/#api-key)
-2. Fill out form
-2. Click "GET FREE API KEY" 
-4. Set it as `ALPHAVANTAGE_API_KEY` environment variable
+### Weather Data (No API Key Required)
+- Uses free Open-Meteo API for weather forecasts
+- Includes automatic geocoding for location coordinates
 
 ### Supported Models
 - Primary: `gemini-2.5-flash` (configured in code)
@@ -78,13 +65,12 @@ make test # run tests
 ## Project Structure
 
 ```
-cs6300-first-agent/
+cs6300-second-agent/
 ├── src/
-│   └── investment_research_agent.py    # Main agent implementation
+│   └── adventure_agent.py              # Main adventure planning agent
 ├── tests/
-│   ├── test_investment_research_agent.py # Test suite
-│   └── README.md                        # Testing documentation
-├── requirements.txt                     # Dependencies
+│   └── test_adventure_agent.py         # Test suite for adventure planning
+├── requirements.txt                    # Dependencies (includes beautifulsoup4, python-dotenv)
 ├── pytest.ini                         # Test configuration
 ├── Makefile                            # Build and run commands
 ├── .env.template                       # Environment variables template
@@ -127,27 +113,74 @@ The Phoenix server runs headlessly in the background, allowing full interaction 
 
 ## Architecture
 
-- **jefe (CodeAgent)**: Main orchestrator that manages sub-agents and handles user queries
-- **seeker (ToolCallingAgent)**: Specialized search agent with web search, page visit, and API calling capabilities
-- **DuckDuckGoSearchTool**: Built-in search functionality
+- **adventure_planner (ToolCallingAgent)**: Main ReAct agent that orchestrates the planning process
+- **adventure_search**: Custom tool for finding destination-specific activities and itineraries
+- **visit_webpage**: Enhanced webpage content extraction with HTML cleaning
+- **get_weather_forecast**: Weather data retrieval using Open-Meteo API with geocoding
+- **DuckDuckGoSearchTool**: Built-in web search functionality
+
+### ReAct Reasoning Flow
+1. **Search**: Find activities and attractions for the destination
+2. **Research**: Visit relevant websites to gather detailed information
+3. **Weather Check**: Get forecast for travel dates
+4. **Analysis**: Consider weather impact on activities
+5. **Synthesis**: Create comprehensive itinerary with weather-appropriate recommendations
+
+## Tools & APIs
+
+### Adventure Search Tool
+- Builds targeted search queries based on destination, activities, and trip duration
+- Integrates with DuckDuckGo for comprehensive results
+- Handles various activity types (hiking, climbing, water sports, etc.)
+
+### Weather Forecast Tool
+- Free Open-Meteo API integration (no API key required)
+- Automatic geocoding for any location worldwide
+- Provides temperature, precipitation, and weather condition codes
+- Returns JSON-formatted forecasts for easy processing
+
+### Web Content Extraction
+- BeautifulSoup-powered HTML cleaning
+- Removes navigation, ads, and non-content elements
+- Handles large pages with intelligent truncation
+- Robust error handling for failed requests
 
 ## Testing
 
 The test suite verifies:
-- ✅ Correct CEO identification (Tim Cook for Apple)
-- ✅ Stock ticker symbol retrieval (AAPL for Apple) 
-- ✅ Investment question handling
-- ✅ Non-investment question rejection
-- ✅ Ticker symbol tool functionality
-- ✅ Company overview tool functionality
+- ✅ Adventure search query generation and results processing
+- ✅ Weather forecast retrieval and JSON formatting
+- ✅ Webpage content extraction and cleaning
+- ✅ Error handling for network failures and invalid inputs
+- ✅ Weather relevance logic for activity recommendations
+- ✅ Agent initialization and tool integration
 
-See `tests/README.md` for detailed testing documentation.
+## Example Output
+
+```
+## Itinerary
+Day 1: Cable car to Aiguille du Midi, glacier viewing
+Day 2: Hiking Lac Blanc trail, village exploration
+
+## Weather Summary
+Partly cloudy, 15-18°C highs, light rain possible Day 2
+
+## Gear Recommendations
+- Rain jacket for Day 2 afternoon
+- Hiking boots for mountain trails
+- Layers for temperature variation
+
+## Sources
+- https://adventurebackpack.com/chamonix-itinerary
+- https://www.earthtrekkers.com/best-things-to-do-in-chamonix/
+```
 
 ## Development
 
 Built with:
-- **smolagents**: Hugging Face agent framework
+- **smolagents**: Hugging Face agent framework with ReAct reasoning
 - **Google Gemini**: LLM backend via OpenAI-compatible API
+- **Open-Meteo**: Free weather API service
 - **DuckDuckGo**: Web search capabilities
-- **pytest**: Testing framework
-- **Alphavantage API**: Company data API
+- **BeautifulSoup**: HTML parsing and content extraction
+- **pytest**: Testing framework with mocking

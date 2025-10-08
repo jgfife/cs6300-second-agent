@@ -19,4 +19,6 @@ optimum-quanto
 pytest
 pytest-mock
 arize-phoenix
+beautifulsoup4
+python-dotenv
 
