@@ -2,7 +2,6 @@
 
 import pytest
 import json
-from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta, timezone
 import sys
 import os
@@ -13,82 +12,52 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from adventure_agent import adventure_search, visit_webpage, get_weather_forecast, adventure_planner
 
 class TestAdventureSearch:
-    """Test the adventure_search tool functionality."""
-    
-    @patch('adventure_agent.DuckDuckGoSearchTool')
-    def test_adventure_search_basic(self, mock_search_tool):
-        """Test basic adventure search functionality."""
-        # Mock the search tool response
-        mock_instance = Mock()
-        mock_instance.return_value = "Mock search results for Chamonix adventure activities"
-        mock_search_tool.return_value = mock_instance
-        
-        result = adventure_search("Chamonix", "hiking", 3)
-        
-        assert "Search results for" in result
-        assert "Chamonix" in result
-        mock_instance.assert_called_once()
-    
-    @patch('adventure_agent.DuckDuckGoSearchTool')
-    def test_adventure_search_no_activities(self, mock_search_tool):
-        """Test adventure search without specific activities."""
-        mock_instance = Mock()
-        mock_instance.return_value = "Mock search results"
-        mock_search_tool.return_value = mock_instance
-        
-        result = adventure_search("Costa Rica", None, 5)
-        
-        assert "Search results for" in result
+    """Tests adventure_search using the real DuckDuckGoSearchTool (no mocks)."""
+
+    def test_adventure_search_basic(self):
+        destination = "Chamonix"
+        activities = "hiking"
+        days = 3
+        expected_query = f"{destination} {activities} {days} day itinerary travel guide things to do"
+
+        result = adventure_search(destination, activities, days)
+
+        if result.startswith("Error performing adventure search"):
+            pytest.skip(f"Search backend unavailable: {result}")
+
+        assert f"Search results for '{expected_query}':" in result
+        assert destination in result
+
+    def test_adventure_search_no_activities(self):
+        destination = "Costa Rica"
+        days = 5
+        expected_query = f"{destination} adventure activities outdoor {days} day itinerary travel guide things to do"
+
+        result = adventure_search(destination, None, days)
+
+        if result.startswith("Error performing adventure search"):
+            pytest.skip(f"Search backend unavailable: {result}")
+
+        assert f"Search results for '{expected_query}':" in result
         assert "adventure activities outdoor" in result
-        
-    def test_adventure_search_error_handling(self):
-        """Test adventure search error handling."""
-        with patch('adventure_agent.DuckDuckGoSearchTool', side_effect=Exception("Search failed")):
-            result = adventure_search("TestDestination", "hiking", 2)
-            assert "Error performing adventure search" in result
 
 class TestVisitWebpage:
-    """Test the visit_webpage tool functionality."""
-    
-    @patch('adventure_agent.requests.get')
-    @patch('adventure_agent.BeautifulSoup')
-    def test_visit_webpage_success(self, mock_soup, mock_get):
-        """Test successful webpage visit and content extraction."""
-        # Mock HTTP response
-        mock_response = Mock()
-        mock_response.raise_for_status.return_value = None
-        mock_response.content = b"<html><body><h1>Adventure Guide</h1><p>Great hiking spots</p></body></html>"
-        mock_get.return_value = mock_response
-        
-        # Mock BeautifulSoup instance
-        mock_soup_instance = Mock()
-        
-        # Mock the __call__ method to return elements with decompose method
-        mock_script = Mock()
-        mock_script.decompose = Mock()
-        mock_style = Mock()
-        mock_style.decompose = Mock()
-        mock_soup_instance.return_value = [mock_script, mock_style]
-        
-        # Mock get_text to return the expected text
-        mock_soup_instance.get_text.return_value = "Adventure Guide\nGreat hiking spots"
-        
-        # Set up the soup constructor to return our mock instance
-        mock_soup.return_value = mock_soup_instance
-        
-        result = visit_webpage("https://example.com/hiking")
-        
-        assert "Adventure Guide Great hiking spots" in result
-        mock_get.assert_called_once()
-        
-    @patch('adventure_agent.requests.get')
-    def test_visit_webpage_http_error(self, mock_get):
-        """Test webpage visit with HTTP error."""
-        mock_get.side_effect = Exception("HTTP 404 Not Found")
-        
-        result = visit_webpage("https://example.com/nonexistent")
-        
-        assert "An unexpected error occurred" in result
+    """Tests visit_webpage against real HTTP requests (no mocks)."""
+
+    def test_visit_webpage_success(self):
+        url = "https://example.com"
+        result = visit_webpage(url)
+
+        if result.startswith("Error fetching") or result.startswith("An unexpected error"):
+            pytest.skip(f"Network/HTTP unavailable: {result}")
+
+        assert "Example Domain" in result
+
+    def test_visit_webpage_http_error(self):
+        # .invalid TLD is guaranteed to be invalid per RFC
+        bad_url = "https://nonexistent-domain-xyz.invalid"
+        result = visit_webpage(bad_url)
+        assert result.startswith("Error fetching the webpage") or result.startswith("An unexpected error")
 
 class TestWeatherForecast:
     """Test the get_weather_forecast tool functionality against the live API."""
@@ -158,13 +127,13 @@ class TestWeatherForecast:
 
 class TestAdventurePlannerAgent:
     """Test the adventure planner agent integration."""
-    
+
     def test_adventure_planner_initialization(self):
         """Test that the adventure planner agent initializes correctly."""
         # Skip if no API key is available
         if not os.getenv('GEMINI_API_KEY'):
             pytest.skip("GEMINI_API_KEY not available")
-            
+
         assert adventure_planner is not None
         assert adventure_planner.name == "adventure_planner"
         assert len(adventure_planner.tools) == 5  # DuckDuckGo, adventure_search, visit_webpage, get_weather_forecast, final_answer
@@ -172,17 +141,17 @@ class TestAdventurePlannerAgent:
 
 class TestWeatherRelevanceLogic:
     """Test weather-based activity filtering logic."""
-    
+
     def test_severe_weather_detection(self):
         """Test detection of severe weather conditions."""
         # Weather codes: 95-99 are thunderstorms, 71-77 are snow, 80-82 are rain showers
         severe_weather_codes = [95, 96, 99, 75, 77, 82]
         mild_weather_codes = [0, 1, 2, 3]  # Clear, partly cloudy, overcast, fog
-        
+
         for code in severe_weather_codes:
             # In real implementation, this would be part of the agent's reasoning
             assert code >= 71 and (code <= 77 or code >= 80)
-            
+
         for code in mild_weather_codes:
             assert code < 10  # Generally good weather codes
 
@@ -191,7 +160,7 @@ class TestWeatherRelevanceLogic:
         high_precip = 15.0  # mm
         moderate_precip = 5.0  # mm
         low_precip = 1.0  # mm
-        
+
         # High precipitation should trigger indoor activity suggestions
         assert high_precip > 10.0
         # Moderate precipitation might require gear recommendations

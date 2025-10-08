@@ -1,24 +1,7 @@
-pip
-torch
-transformers
-smolagents[litellm]
-smolagents[transformers]
-smolagents[openai]
-smolagents[telemetry,toolkit]
-ddgs
-requests
-duckduckgo-search
-wikipedia
-pandas
-pillow
-accelerate
-num2words
-quanto
-bitsandbytes
-optimum-quanto
-pytest
-pytest-mock
-arize-phoenix
-beautifulsoup4
-python-dotenv
-
+smolagents            # Core agent framework (DuckDuckGoSearchTool, ToolCallingAgent, OpenAIServerModel)
+requests              # HTTP requests for web + weather APIs
+duckduckgo-search     # Backing library for DuckDuckGoSearchTool (search utility)
+beautifulsoup4        # HTML parsing for visit_webpage
+python-dotenv         # Load GEMINI_API_KEY and other env vars
+arize-phoenix         # Observability / telemetry instrumentation
+pytest                # Test framework
