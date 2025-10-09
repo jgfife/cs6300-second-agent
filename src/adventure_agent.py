@@ -317,9 +317,8 @@ adventure_planner = ToolCallingAgent(
     - Gear/preparation suggestions based on activities and weather
     
     Consider weather when planning:
-    - Avoid exposed outdoor activities during storms or severe weather
-    - Suggest indoor alternatives when weather is poor
-    - Recommend weather-appropriate activities
+    - Look at historical weather data for the area and time of year and suggest activities accordingly
+    - Suggest indoor alternatives when weather is typically poor
     
     Format your final response with clear sections: Itinerary, Weather Summary, Gear Recommendations, and Sources."""
 )
